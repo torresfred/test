@@ -1,0 +1,1448 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "SCI Template to create VPC on the basis of parameter input",
+    "Parameters": {
+        "ClientName": {
+            "Description": "Enter 3 character client code in lower case ",
+            "Type": "String"
+        },
+        "CIDRBlock": {
+            "Description": "Enter the CIDR Block for VPC. For ex: 10.10.0.0/16",
+            "Type": "String"
+        },
+        "NonProdAZ": {
+            "Description": "Select two availability zones that you want to use for non-production environments",
+            "Type": "List<AWS::EC2::AvailabilityZone::Name>"
+        },
+        "ProdAZ": {
+            "Description": "Select two availability zones that you want to use for production environments.",
+            "Type": "List<AWS::EC2::AvailabilityZone::Name>"
+        }
+    },
+    "Resources": {
+        "VPC": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "vpc"
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "prod"
+                    }
+                ],
+                "CidrBlock": {
+                    "Ref": "CIDRBlock"
+                },
+                "EnableDnsSupport": "true",
+                "EnableDnsHostnames": "true"
+            }
+        },
+        "ProdSubnetPublic1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "MapPublicIpOnLaunch": "false",
+                "AvailabilityZone": {
+                    "Fn::Select": [
+                        "0",
+                        {
+                            "Ref": "ProdAZ"
+                        }
+                    ]
+                },
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "CidrBlock": {
+                    "Fn::Join": [
+                        ".",
+                        [
+                            {
+                                "Fn::Select": [
+                                    0,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "Fn::Select": [
+                                    1,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            2,
+                            "0/24"
+                        ]
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "prod",
+                                    "public",
+                                    {
+                                        "Fn::Select": [
+                                            2,
+                                            {
+                                                "Fn::Split": [
+                                                    "-",
+                                                    {
+                                                        "Fn::Select": [
+                                                            0,
+                                                            {
+                                                                "Ref": "ProdAZ"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "prod"
+                    },
+                    {
+                        "Key": "usage",
+                        "Value": "primary"
+                    }
+                ]
+            }
+        },
+        "ProdSubnetPrivate1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "MapPublicIpOnLaunch": "false",
+                "AvailabilityZone": {
+                    "Fn::Select": [
+                        "0",
+                        {
+                            "Ref": "ProdAZ"
+                        }
+                    ]
+                },
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "CidrBlock": {
+                    "Fn::Join": [
+                        ".",
+                        [
+                            {
+                                "Fn::Select": [
+                                    0,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "Fn::Select": [
+                                    1,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            3,
+                            "0/24"
+                        ]
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "prod",
+                                    "private",
+                                    {
+                                        "Fn::Select": [
+                                            2,
+                                            {
+                                                "Fn::Split": [
+                                                    "-",
+                                                    {
+                                                        "Fn::Select": [
+                                                            0,
+                                                            {
+                                                                "Ref": "ProdAZ"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "prod"
+                    },
+                    {
+                        "Key": "usage",
+                        "Value": "primary"
+                    }
+                ]
+            }
+        },
+        "ProdSubnetPublic2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "MapPublicIpOnLaunch": "false",
+                "AvailabilityZone": {
+                    "Fn::Select": [
+                        "1",
+                        {
+                            "Ref": "ProdAZ"
+                        }
+                    ]
+                },
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "CidrBlock": {
+                    "Fn::Join": [
+                        ".",
+                        [
+                            {
+                                "Fn::Select": [
+                                    0,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "Fn::Select": [
+                                    1,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            5,
+                            "0/24"
+                        ]
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "prod",
+                                    "public",
+                                    {
+                                        "Fn::Select": [
+                                            2,
+                                            {
+                                                "Fn::Split": [
+                                                    "-",
+                                                    {
+                                                        "Fn::Select": [
+                                                            1,
+                                                            {
+                                                                "Ref": "ProdAZ"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "prod"
+                    },
+                    {
+                        "Key": "usage",
+                        "Value": "secondary"
+                    }
+                ]
+            }
+        },
+        "ProdSubnetPrivate2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "MapPublicIpOnLaunch": "false",
+                "AvailabilityZone": {
+                    "Fn::Select": [
+                        "1",
+                        {
+                            "Ref": "ProdAZ"
+                        }
+                    ]
+                },
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "CidrBlock": {
+                    "Fn::Join": [
+                        ".",
+                        [
+                            {
+                                "Fn::Select": [
+                                    0,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "Fn::Select": [
+                                    1,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            6,
+                            "0/24"
+                        ]
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "prod",
+                                    "private",
+                                    {
+                                        "Fn::Select": [
+                                            2,
+                                            {
+                                                "Fn::Split": [
+                                                    "-",
+                                                    {
+                                                        "Fn::Select": [
+                                                            1,
+                                                            {
+                                                                "Ref": "ProdAZ"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "prod"
+                    },
+                    {
+                        "Key": "usage",
+                        "Value": "secondary"
+                    }
+                ]
+            }
+        },
+        "NonProdSubnetPublic1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "MapPublicIpOnLaunch": "false",
+                "AvailabilityZone": {
+                    "Fn::Select": [
+                        "0",
+                        {
+                            "Ref": "NonProdAZ"
+                        }
+                    ]
+                },
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "CidrBlock": {
+                    "Fn::Join": [
+                        ".",
+                        [
+                            {
+                                "Fn::Select": [
+                                    0,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "Fn::Select": [
+                                    1,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            8,
+                            "0/24"
+                        ]
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "nprd",
+                                    "public",
+                                    {
+                                        "Fn::Select": [
+                                            2,
+                                            {
+                                                "Fn::Split": [
+                                                    "-",
+                                                    {
+                                                        "Fn::Select": [
+                                                            0,
+                                                            {
+                                                                "Ref": "NonProdAZ"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "nprd"
+                    },
+                    {
+                        "Key": "usage",
+                        "Value": "primary"
+                    }
+                ]
+            }
+        },
+        "NonProdSubnetPrivate1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "MapPublicIpOnLaunch": "false",
+                "AvailabilityZone": {
+                    "Fn::Select": [
+                        "0",
+                        {
+                            "Ref": "NonProdAZ"
+                        }
+                    ]
+                },
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "CidrBlock": {
+                    "Fn::Join": [
+                        ".",
+                        [
+                            {
+                                "Fn::Select": [
+                                    0,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "Fn::Select": [
+                                    1,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            9,
+                            "0/24"
+                        ]
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "nprd",
+                                    "private",
+                                    {
+                                        "Fn::Select": [
+                                            2,
+                                            {
+                                                "Fn::Split": [
+                                                    "-",
+                                                    {
+                                                        "Fn::Select": [
+                                                            0,
+                                                            {
+                                                                "Ref": "NonProdAZ"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "nprd"
+                    },
+                    {
+                        "Key": "usage",
+                        "Value": "primary"
+                    }
+                ]
+            }
+        },
+        "NonProdSubnetPublic2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "MapPublicIpOnLaunch": "false",
+                "AvailabilityZone": {
+                    "Fn::Select": [
+                        "1",
+                        {
+                            "Ref": "NonProdAZ"
+                        }
+                    ]
+                },
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "CidrBlock": {
+                    "Fn::Join": [
+                        ".",
+                        [
+                            {
+                                "Fn::Select": [
+                                    0,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "Fn::Select": [
+                                    1,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            10,
+                            "0/24"
+                        ]
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "nprd",
+                                    "public",
+                                    {
+                                        "Fn::Select": [
+                                            2,
+                                            {
+                                                "Fn::Split": [
+                                                    "-",
+                                                    {
+                                                        "Fn::Select": [
+                                                            1,
+                                                            {
+                                                                "Ref": "NonProdAZ"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "nprd"
+                    },
+                    {
+                        "Key": "usage",
+                        "Value": "secondary"
+                    }
+                ]
+            }
+        },
+        "NonProdSubnetPrivate2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "MapPublicIpOnLaunch": "false",
+                "AvailabilityZone": {
+                    "Fn::Select": [
+                        "1",
+                        {
+                            "Ref": "NonProdAZ"
+                        }
+                    ]
+                },
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "CidrBlock": {
+                    "Fn::Join": [
+                        ".",
+                        [
+                            {
+                                "Fn::Select": [
+                                    0,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "Fn::Select": [
+                                    1,
+                                    {
+                                        "Fn::Split": [
+                                            ".",
+                                            {
+                                                "Ref": "CIDRBlock"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            11,
+                            "0/24"
+                        ]
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "nprd",
+                                    "private",
+                                    {
+                                        "Fn::Select": [
+                                            2,
+                                            {
+                                                "Fn::Split": [
+                                                    "-",
+                                                    {
+                                                        "Fn::Select": [
+                                                            1,
+                                                            {
+                                                                "Ref": "NonProdAZ"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "nprd"
+                    },
+                    {
+                        "Key": "usage",
+                        "Value": "secondary"
+                    }
+                ]
+            }
+        },
+        "VPCInternetGateway": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "igw"
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "prod"
+                    }
+                ]
+            }
+        },
+        "VPCAttachGateway": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "InternetGatewayId": {
+                    "Ref": "VPCInternetGateway"
+                }
+            }
+        },
+        "PublicRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "public",
+                                    "route"
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "prod"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            }
+        },
+        "PrivateRouteTable1": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "private",
+                                    "route",
+                                    "nat",
+                                    {
+                                        "Fn::Select": [
+                                            2,
+                                            {
+                                                "Fn::Split": [
+                                                    "-",
+                                                    {
+                                                        "Fn::Select": [
+                                                            0,
+                                                            {
+                                                                "Ref": "ProdAZ"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "prod"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            }
+        },
+        "PrivateRouteTable2": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "private",
+                                    "route",
+                                    "nat",
+                                    {
+                                        "Fn::Select": [
+                                            2,
+                                            {
+                                                "Fn::Split": [
+                                                    "-",
+                                                    {
+                                                        "Fn::Select": [
+                                                            1,
+                                                            {
+                                                                "Ref": "ProdAZ"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "prod"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            }
+        },
+        "PublicRouteTableAssociationProd1": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "ProdSubnetPublic1"
+                },
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                }
+            }
+        },
+        "PublicRouteTableAssociationProd2": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "ProdSubnetPublic2"
+                },
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                }
+            }
+        },
+        "PublicRouteTableAssociationNonProd1": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "NonProdSubnetPublic1"
+                },
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                }
+            }
+        },
+        "PublicRouteTableAssociationNonProd2": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "NonProdSubnetPublic2"
+                },
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                }
+            }
+        },
+        "PrivateRouteTable1AssociationProd1": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "ProdSubnetPrivate1"
+                },
+                "RouteTableId": {
+                    "Ref": "PrivateRouteTable1"
+                }
+            }
+        },
+        "PrivateRouteTable2AssociationProd2": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "ProdSubnetPrivate2"
+                },
+                "RouteTableId": {
+                    "Ref": "PrivateRouteTable2"
+                }
+            }
+        },
+        "PrivateRouteTable1AssociationNonProd1": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "NonProdSubnetPrivate1"
+                },
+                "RouteTableId": {
+                    "Ref": "PrivateRouteTable1"
+                }
+            }
+        },
+        "PrivateRouteTable2AssociationNonProd2": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "NonProdSubnetPrivate2"
+                },
+                "RouteTableId": {
+                    "Ref": "PrivateRouteTable2"
+                }
+            }
+        },
+        "VPCIGRoute": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "VPCAttachGateway",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {
+                    "Ref": "VPCInternetGateway"
+                }
+            }
+        },
+        "VPCNATGateway1": {
+            "DependsOn": "VPCAttachGateway",
+            "Type": "AWS::EC2::NatGateway",
+            "Properties": {
+                "AllocationId": {
+                    "Fn::GetAtt": [
+                        "NATGatewayEIP1",
+                        "AllocationId"
+                    ]
+                },
+                "SubnetId": {
+                    "Ref": "ProdSubnetPublic1"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "ngw",
+                                    {
+                                        "Fn::Select": [
+                                            2,
+                                            {
+                                                "Fn::Split": [
+                                                    "-",
+                                                    {
+                                                        "Fn::Select": [
+                                                            0,
+                                                            {
+                                                                "Ref": "ProdAZ"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "prod"
+                    }
+                ]
+            }
+        },
+        "NATGatewayEIP1": {
+            "Type": "AWS::EC2::EIP",
+            "Properties": {
+                "Domain": "vpc"
+            }
+        },
+        "VPCNATGateway2": {
+            "DependsOn": "VPCAttachGateway",
+            "Type": "AWS::EC2::NatGateway",
+            "Properties": {
+                "AllocationId": {
+                    "Fn::GetAtt": [
+                        "NATGatewayEIP2",
+                        "AllocationId"
+                    ]
+                },
+                "SubnetId": {
+                    "Ref": "ProdSubnetPublic2"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "_",
+                                [
+                                    {
+                                        "Ref": "ClientName"
+                                    },
+                                    "ngw",
+                                    {
+                                        "Fn::Select": [
+                                            2,
+                                            {
+                                                "Fn::Split": [
+                                                    "-",
+                                                    {
+                                                        "Fn::Select": [
+                                                            1,
+                                                            {
+                                                                "Ref": "ProdAZ"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "client",
+                        "Value": {
+                            "Ref": "ClientName"
+                        }
+                    },
+                    {
+                        "Key": "type",
+                        "Value": "prod"
+                    }
+                ]
+            }
+        },
+        "NATGatewayEIP2": {
+            "Type": "AWS::EC2::EIP",
+            "Properties": {
+                "Domain": "vpc"
+            }
+        },
+        "VPCNATRoute1": {
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "PrivateRouteTable1"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "NatGatewayId": {
+                    "Ref": "VPCNATGateway1"
+                }
+            }
+        },
+        "VPCNATRoute2": {
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "PrivateRouteTable2"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "NatGatewayId": {
+                    "Ref": "VPCNATGateway2"
+                }
+            }
+        },
+        "S3Endpoint": {
+            "Type": "AWS::EC2::VPCEndpoint",
+            "Properties": {
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Action": "*",
+                            "Resource": "*"
+                        }
+                    ]
+                },
+                "RouteTableIds": [
+                    {
+                        "Ref": "PrivateRouteTable1"
+                    },
+                    {
+                        "Ref": "PrivateRouteTable2"
+                    }
+                ],
+                "ServiceName": {
+                    "Fn::Join": [
+                        ".",
+                        [
+                            "com.amazonaws",
+                            {
+                                "Ref": "AWS::Region"
+                            },
+                            "s3"
+                        ]
+                    ]
+                },
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "ClientName": {
+            "Description": "Three character client code",
+            "Value": {
+                "Ref": "ClientName"
+            },
+            "Export": {
+                "Name": "ClientName"
+            }
+        },
+        "StackVPC": {
+            "Description": "The ID of the VPC created",
+            "Value": {
+                "Ref": "VPC"
+            },
+            "Export": {
+                "Name": "VPC"
+            }
+        },
+        "StackProdSubnetPublic1": {
+            "Description": "The ID of ProdSubnetPublic1",
+            "Value": {
+                "Ref": "ProdSubnetPublic1"
+            },
+            "Export": {
+                "Name": "ProdSubnetPublic1"
+            }
+        },
+        "StackProdSubnetPrivate1": {
+            "Description": "The ID of ProdSubnetPrivate1",
+            "Value": {
+                "Ref": "ProdSubnetPrivate1"
+            },
+            "Export": {
+                "Name": "ProdSubnetPrivate1"
+            }
+        },
+        "StackProdSubnetPublic2": {
+            "Description": "The ID of ProdSubnetPublic2",
+            "Value": {
+                "Ref": "ProdSubnetPublic2"
+            },
+            "Export": {
+                "Name": "ProdSubnetPublic2"
+            }
+        },
+        "StackProdSubnetPrivate2": {
+            "Description": "The ID of ProdSubnetPrivate2",
+            "Value": {
+                "Ref": "ProdSubnetPrivate2"
+            },
+            "Export": {
+                "Name": "ProdSubnetPrivate2"
+            }
+        },
+        "StackNprdSubnetPublic1": {
+            "Description": "The ID of NonProdSubnetPublic1",
+            "Value": {
+                "Ref": "NonProdSubnetPublic1"
+            },
+            "Export": {
+                "Name": "NprdSubnetPublic1"
+            }
+        },
+        "StackNprdSubnetPrivate1": {
+            "Description": "The ID of NonProdSubnetPrivate1",
+            "Value": {
+                "Ref": "NonProdSubnetPrivate1"
+            },
+            "Export": {
+                "Name": "NprdSubnetPrivate1"
+            }
+        },
+        "StackNprdSubnetPublic2": {
+            "Description": "The ID of NonProdSubnetPublic2",
+            "Value": {
+                "Ref": "NonProdSubnetPublic2"
+            },
+            "Export": {
+                "Name": "NprdSubnetPublic2"
+            }
+        },
+        "StackNprdSubnetPrivate2": {
+            "Description": "The ID of NonProdSubnetPrivate2",
+            "Value": {
+                "Ref": "NonProdSubnetPrivate2"
+            },
+            "Export": {
+                "Name": "NprdSubnetPrivate2"
+            }
+        },
+        "StackS3Endpoint": {
+            "Description": "The ID of S3Endpoint",
+            "Value": {
+                "Ref": "S3Endpoint"
+            },
+            "Export": {
+                "Name": "S3Endpoint"
+            }
+        }
+    }
+}
