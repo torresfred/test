@@ -1,0 +1,858 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >- 
+    Cloud Formation to Build PIA components for an environment
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: "Network Configuration"
+        Parameters: 
+          - ClientType
+          - CMSConnection
+          - HighAvailability
+          - HostedZone
+          - DomainName
+      -
+        Label: 
+          default: "EC2 Configuration"
+        Parameters: 
+          - WebAmi
+          - AppAmi
+          - IamRole
+          - MinInst
+      
+        Label: 
+          default: "Environment Configuration"
+        Parameters: 
+          - ClientCode    
+          - Env
+          - EnvName
+          - EnvType
+          - Pillar
+          - ToolsVersion
+          - AppVersion
+      -  
+        Label: 
+          default: "Webserver Configuration"
+        Parameters: 
+          - heapsize
+          - webprofile
+      - 
+        Label: 
+          default: "PSUNX Configuration"
+        Parameters: 
+          - SCHNAME
+          - AESRV
+          - AddlScheduler
+          - AddlSCHNAME
+          - AddlAESRV
+      - 
+        Label: 
+          default: "Appserver Configuration"
+        Parameters: 
+          - RenServer
+          - JSH
+          - APSRV
+          - ANALYTIC
+          - QCKSRV
+          - QRYSRV
+          - DBGSRV
+          - McfServer
+          - PPMServer
+          - DomainGateway
+          - ServerEvents  
+Mappings: 
+    InstType: 
+        Small: 
+            WebInstType: "t2.small"
+            AppInstType: "m3.medium"
+            PsuInstType: "m3.medium"
+        Medium: 
+            WebInstType: "t2.medium"
+            AppInstType: "m3.medium"
+            PsuInstType: "m3.medium"
+        Large: 
+            WebInstType: "m3.medium"
+            AppInstType: "m4.large"
+            PsuInstType: "m3.medium"
+      
+       
+Parameters:
+    ClientType:
+        Description: >- 
+           Client Type 
+        Type: String
+        Default: small
+        AllowedValues:
+            - Small
+            - Medium
+            - Large
+    AppVersion:
+        Description: >- 
+            Enter Apps Version(Ex FS920a) lower case 
+        Type: String
+    
+    HighAvailability:
+        Description: >- 
+           High Availability
+        Type: String
+        Default: No
+        AllowedValues:
+            - No
+            - Yes
+    CMSConnection:
+        Description: >- 
+           CMS Connectivity 
+        Type: String
+        Default: NotRequired
+        AllowedValues:
+            - Required
+            - NotRequired
+    DomainName:
+        Description: >- 
+           Domain Name 
+        Type: String
+    
+    WebAmi:
+        Description: >-
+            Enter WebAmi  
+        Type: String
+               
+    AppAmi:
+        Description: >-
+            Enter AppAmi 
+        Type: String
+       
+    IamRole:
+        Description: >-
+            Enter IAM Role
+        Type: String
+        Default: ncr-ec2-iam-role
+    ClientCode:
+        Description: >-
+            Enter Client Code  
+        Type: String	
+    Env:
+        Description: >-
+            Enter Env(ex:dem/dev/tst/prd) 
+        Type: String    
+    EnvName:
+        Description: >-
+            Enter Envrionment to be built 
+        Type: String
+    EnvType:
+        Description: >- 
+           Select the Env type 
+        Type: String
+        Default: nprd
+        AllowedValues:
+            - nprd
+            - prod
+    Pillar:
+        Description: >-
+            Enter Application Pillar (Ex:fs/hr) 
+        Type: String    
+    
+    ToolsVersion:
+        Description: >- 
+            Enter Tools Version(Ex 85410) 
+        Type: String
+    HostedZone:
+        Description: >- 
+            Hosted Zone for Route 53
+        Type: String 
+        Default: Z1MU5VZFBB84CJ
+        
+    MinInst:
+        Description: >- 
+            Minimum Instances 
+        Type: String 
+    
+    heapsize:
+        Description: >- 
+            Webserver Heap Size
+        Type: String              
+    webprofile:
+        Description: >- 
+            WebProfile Name 
+        Type: String 
+        Default: DEV      
+    JSH:
+        Description: >- 
+            No of Jolt Handlers needed
+        Type: String
+        Default: 3        
+    APSRV:
+        Description: >- 
+            No of APPSRV needed
+        Type: String 
+        Default: 3   
+    ANALYTIC:
+        Description: >- 
+            No of ANALYTIC --> 0 Disabled
+        Type: String 
+        Default: 0
+    QCKSRV:
+        Description: >- 
+            Enable QUICK SERVER ?
+        Type: String
+        Default: "No"
+        AllowedValues:
+            - "No"
+            - "Yes"
+    QRYSRV:
+        Description: >- 
+            Enable QUERY SERVER ?
+        Type: String
+        Default: "No"
+        AllowedValues:
+            - "No"
+            - "Yes"        
+    DBGSRV:
+        Description: >- 
+            Enable APP designer Debugger
+        Type: String
+        Default: "No"
+        AllowedValues:
+            - "No"
+            - "Yes" 
+    RenServer:
+        Description: >- 
+            Please select if REN/Event Notification Needed ? 
+        Type: String
+        Default: "No"
+        AllowedValues:
+            - "No"
+            - "Yes"
+    McfServer:
+        Description: >- 
+            Please select if Multichannel Franework Needed ? 
+        Type: String
+        Default: "No"
+        AllowedValues:
+            - "No"
+            - "Yes"
+    PPMServer:
+        Description: >- 
+            Please select if Perf Collator Needed ? 
+        Type: String
+        Default: "No"
+        AllowedValues:
+            - "No"
+            - "Yes"                
+       
+    DomainGateway:
+        Description: >- 
+            Please select if Domains Gateway Needed ? 
+        Type: String
+        Default: "No"
+        AllowedValues:
+            - "No"
+            - "Yes"    
+    ServerEvents:
+        Description: >- 
+            Please select if Domains Gateway Needed ? 
+        Type: String
+        Default: "No"
+        AllowedValues:
+            - "No"
+            - "Yes"  
+    SCHNAME:
+        Description: >- 
+            SCHEDULER NAME
+        Type: String
+        Default: PSUNX        
+    AESRV:
+        Description: >- 
+            No of PSAESRV to be enabled --> 0 Disabled 
+        Type: String 
+        Default: 3   
+   
+    AddlScheduler:
+        Description: >- 
+            Additional Unix Schedler Required?
+        Type: String
+        Default: "No"
+        AllowedValues:
+            - "No"
+            - "Yes"  
+    AddlSCHNAME:
+        Description: >- 
+            SCHEDULER NAME
+        Type: String
+        Default: PSUNX2       
+    AddlAESRV:
+        Description: >- 
+            No of PSAESRV to be enabled --> 0 Disabled 
+        Type: String 
+        Default: 3           
+Conditions:
+    CmsYes: !Equals [!Ref CMSConnection, "Required"]  
+    HAYes: !Equals [!Ref HighAvailability, true]    
+    RenYes: !Equals [!Ref RenServer, "Yes" ]
+    RenNo: !Equals  [!Ref RenServer, "No" ]
+    AddScheduler: !Equals  [!Ref AddlScheduler, "Yes" ]
+    
+Resources: 
+    WebLaunchCfg:            
+        Type: AWS::AutoScaling::LaunchConfiguration
+        Properties:
+            ImageId: !Ref WebAmi
+            IamInstanceProfile: !Ref IamRole
+            InstanceType: !FindInMap [ InstType, !Ref ClientType, WebInstType ]
+            KeyName: !Join [ "_",[ !Ref ClientCode, !Ref Pillar, !Ref EnvType ] ]
+            SecurityGroups:
+                - !ImportValue sgpssharedawslinux
+                - 'Fn::ImportValue': !Join [ "-",[ sgpsweb,!Ref Pillar,!Ref EnvType ] ]
+                - !If [CmsYes, sg-967baae5, !Ref "AWS::NoValue" ] 
+            UserData:    
+                Fn::Base64: !Sub |
+                    #!/bin/bash 
+                    /usr/local/aws/bin/aws s3 cp s3://wsbpoc-boot-strap/scripts/app/boot_strap.sh /root/admin/
+                    /bin/dos2unix /root/admin/boot_strap.sh  /root/admin/boot_strap.sh
+                    /bin/chmod -R 700 /root/admin/
+                    /root/admin/boot_strap.sh
+                    TOOLS=${ToolsVersion}
+                    APPS=${AppVersion}
+                    heapsize=${heapsize}
+                    webprofile=${webprofile} 
+                   
+    AppLaunchCfg:            
+        Type: AWS::AutoScaling::LaunchConfiguration
+        Properties:
+            ImageId: !Ref AppAmi
+            IamInstanceProfile: !Ref IamRole
+            InstanceType: !FindInMap [ InstType, !Ref ClientType, AppInstType ]
+            KeyName: !Join [ "_",[ !Ref ClientCode, !Ref Pillar, !Ref EnvType ] ]
+            SecurityGroups:
+                - !ImportValue sgpssharedawslinux
+                - 'Fn::ImportValue': !Join [ "-",[ sgpsapp,!Ref Pillar,!Ref EnvType ] ]
+                - !If [CmsYes, sg-967baae5, !Ref "AWS::NoValue" ]  
+            UserData:    
+                Fn::Base64: !Sub |
+                    #!/bin/bash 
+                    /usr/local/aws/bin/aws s3 cp s3://wsbpoc-boot-strap/scripts/app/boot_strap.sh /root/admin/
+                    /bin/dos2unix /root/admin/boot_strap.sh  /root/admin/boot_strap.sh
+                    /bin/chmod -R 700 /root/admin/
+                    /root/admin/boot_strap.sh
+                    TOOLS=${ToolsVersion}
+                    APPS=${AppVersion}
+                    ANALYTIC=${ANALYTIC}
+                    APSRV=${APSRV}
+                    JSH=${JSH}
+                    DBGSRV=${DBGSRV}
+                    DomainGateway=${DomainGateway}
+                    McfServer=${McfServer}
+                    PPMServer=${PPMServer}
+                    QCKSRV=${QCKSRV}
+                    QRYSRV=${QRYSRV}
+                    RenServer=${RenServer}
+                    ServerEvents=${ServerEvents}
+                    
+    PsuLaunchCfg:            
+        Type: AWS::AutoScaling::LaunchConfiguration
+        Properties:
+            ImageId: !Ref AppAmi
+            IamInstanceProfile: !Ref IamRole
+            InstanceType: !FindInMap [ InstType, !Ref ClientType, PsuInstType ]
+            KeyName: !Join [ "_",[ !Ref ClientCode, !Ref Pillar, !Ref EnvType ] ]
+            SecurityGroups:
+                - !ImportValue sgpssharedawslinux
+                - 'Fn::ImportValue': !Join [ "-",[ sgpspsunx,!Ref Pillar,!Ref EnvType ] ]
+                - 'Fn::ImportValue': !Join [ "-",[ sgps3rdpartypsunx,!Ref Pillar,!Ref EnvType ] ]
+                - !If [CmsYes, sg-967baae5, !Ref "AWS::NoValue" ] 
+            UserData:    
+                Fn::Base64: !Sub |
+                    #!/bin/bash 
+                    /usr/local/aws/bin/aws s3 cp s3://wsbpoc-boot-strap/scripts/app/boot_strap.sh /root/admin/
+                    /bin/dos2unix /root/admin/boot_strap.sh  /root/admin/boot_strap.sh
+                    /bin/chmod -R 700 /root/admin/
+                    /root/admin/boot_strap.sh
+                    TOOLS=${ToolsVersion}
+                    APPS=${AppVersion}
+                    AESRV=${AESRV}
+                    
+                    
+    WebElb:
+        Type: AWS::ElasticLoadBalancing::LoadBalancer
+        Properties:
+            Scheme: internal
+            Subnets: 
+                - !ImportValue NprdSubnetPrivate1
+                - !If [HAYes, !ImportValue NprdSubnetPrivate2, !Ref "AWS::NoValue" ] 
+            HealthCheck:
+                HealthyThreshold: '2'
+                Interval: '30'
+                Target: HTTP:8080/index.html
+                Timeout: '5'
+                UnhealthyThreshold: '2'
+            ConnectionDrainingPolicy:
+                Enabled: 'true'
+                Timeout: '300'
+            ConnectionSettings:
+                IdleTimeout: '300'
+            CrossZone: 'true'
+            SecurityGroups:
+                - 'Fn::ImportValue': !Join [ "-",[ sgpslbprivatepia,!Ref Pillar,!Ref EnvType ] ]
+            Listeners:
+                - InstancePort: '8080'
+                  LoadBalancerPort: '80'
+                  Protocol: HTTP 
+                  InstanceProtocol: HTTP
+                  PolicyNames:
+                      - !Join [ "",[ AWSConsole-AppCookieStickinessPolicy-, !Ref EnvName ] ]
+            LoadBalancerName: !Ref EnvName          
+            AppCookieStickinessPolicy:
+                - PolicyName: !Join [ "",[ AWSConsole-AppCookieStickinessPolicy-, !Ref EnvName ] ]
+                  CookieName: !Join [ "",[ !Ref EnvName, -8080-PORTAL-PSJSESSIONID ] ]
+            Tags:
+               - Key: type
+                 Value: !Ref EnvType
+               - Key: pillar
+                 Value: !Ref Pillar
+               - Key: service
+                 Value: lb
+               - Key: client
+                 Value: !Ref ClientCode
+               - Key: env
+                 Value: !Ref Env
+               - Key: Name
+                 Value: !Ref EnvName
+    WebElbUrlAlarm:                        
+        Type: "AWS::CloudWatch::Alarm"
+        Properties:
+            ActionsEnabled: true
+            AlarmActions: 
+                - !ImportValue SnsNprdTopicArn  
+            AlarmDescription: "Alarm on ELB UnHealthy Hosts"
+            AlarmName: !Join [ "-",[ !Ref EnvType, awspsa, !Ref EnvName,  -ELB-Unhealthy-Hosts ] ]
+            ComparisonOperator: GreaterThanOrEqualToThreshold
+            Dimensions: 
+               - Name   : LoadBalancerName 
+                 Value  : !Ref WebElb
+            EvaluationPeriods: 1
+            MetricName: UnHealthyHostCount
+            Namespace: AWS/ELB
+            Period: 60
+            Statistic: Sum
+            Threshold: 3.0
+            TreatMissingData: missing
+            Unit: Count        
+    
+    WebElbDns:
+        Type: AWS::Route53::RecordSet
+        Properties:
+            HostedZoneId: !Ref HostedZone
+            Comment: 'DNS name for Prod environment'
+            Name: !Join ['', [!Ref EnvName, ., !Ref DomainName]]
+            Type: CNAME
+            TTL: '300'
+            ResourceRecords:
+               - !GetAtt  WebElb.DNSName      
+               
+    RenElb:
+        Type: AWS::ElasticLoadBalancing::LoadBalancer
+        Condition: RenYes
+        Properties:
+            Scheme: internal
+            Subnets: 
+               - !ImportValue NprdSubnetPrivate1 
+               - !If [HAYes, !ImportValue NprdSubnetPrivate2, !Ref "AWS::NoValue" ]
+            HealthCheck: 
+                HealthyThreshold: '2'
+                Interval: '30'
+                Target: TCP:7180
+                Timeout: '5'
+                UnhealthyThreshold: '2'
+            ConnectionDrainingPolicy:
+                Enabled: 'true'
+                Timeout: '300'
+            ConnectionSettings:
+                IdleTimeout: '300'
+            CrossZone: 'true'
+            SecurityGroups:
+                - !ImportValue sgpslbprivateren-fs-nprd
+                - 'Fn::ImportValue': !Join [ "-",[ sgpslbprivateren,!Ref Pillar,!Ref EnvType ] ] 
+            Listeners:
+                - InstancePort: '7180'
+                  LoadBalancerPort: '80'
+                  Protocol: HTTP 
+                  InstanceProtocol: HTTP
+                  PolicyNames:
+                      - !Join [ "",[ AWSConsole-AppCookieStickinessPolicy-, !Ref EnvName,ren ] ]
+            LoadBalancerName: !Join [ "", [!Ref EnvName, "-ren" ]]          
+            AppCookieStickinessPolicy:
+                - PolicyName: !Join [ "",[ AWSConsole-AppCookieStickinessPolicy-, !Ref EnvName,ren ] ]
+                  CookieName: !Join [ "",[ !Ref EnvName, -8080-PORTAL-PSJSESSIONID, ren ] ]
+            Tags:
+               - Key: type
+                 Value: !Ref EnvType
+               - Key: pillar
+                 Value: !Ref Pillar
+               - Key: service
+                 Value: renlb
+               - Key: client
+                 Value: !Ref ClientCode
+               - Key: env
+                 Value: !Ref Env
+               - Key: Name
+                 Value: !Ref EnvName 
+    
+    RenElbUrlAlarm:                        
+        Type: "AWS::CloudWatch::Alarm"
+        Condition: RenYes
+        Properties:
+            ActionsEnabled: true
+            AlarmActions: 
+                - !ImportValue SnsNprdTopicArn   
+            AlarmDescription: "Alarm on REN ELB Unhealthy Hosts"
+            AlarmName: !Join [ "-",[ !Ref EnvType, awspsa, !Ref EnvName,  -RenELB-Unhealthy-Hosts ] ]
+            ComparisonOperator: GreaterThanOrEqualToThreshold
+            Dimensions: 
+               - Name   : LoadBalancerName 
+                 Value  : !Ref RenElb
+            EvaluationPeriods: 1
+            MetricName: UnHealthyHostCount
+            Namespace: AWS/ELB
+            Period: 60
+            Statistic: Sum
+            Threshold: 3.0
+            TreatMissingData: missing
+            Unit: Count
+            
+    RenElbDns:
+        Type: AWS::Route53::RecordSet
+        Condition: RenYes
+        Properties:
+            HostedZoneId:  !Ref HostedZone
+            Comment: 'DNS name for Ren environment'
+            Name: !Join ['', [!Ref EnvName, ren, ., !Ref DomainName]]
+            Type: CNAME
+            TTL: '300'
+            ResourceRecords:
+               - !GetAtt  RenElb.DNSName     
+               
+    WebAutoScaleGrp:                
+        Type: AWS::AutoScaling::AutoScalingGroup
+        Properties:
+            Cooldown: 600
+            DesiredCapacity: !If [HAYes, 1, 1 ]
+            MinSize: !If [HAYes, 1, 1 ]
+            MaxSize: 2
+            HealthCheckGracePeriod: 100
+            HealthCheckType: ELB
+            LaunchConfigurationName: !Ref  WebLaunchCfg
+            LoadBalancerNames:
+                - !Ref WebElb
+            NotificationConfigurations:
+                - TopicARN: 
+                      !ImportValue SnsNprdTopicArn
+                  NotificationTypes:
+                     - autoscaling:EC2_INSTANCE_LAUNCH
+                     - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+                     - autoscaling:EC2_INSTANCE_TERMINATE
+                     - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            TerminationPolicies:
+               - OldestLaunchConfiguration
+            VPCZoneIdentifier:
+                - !ImportValue NprdSubnetPrivate1 
+                - !If [HAYes, !ImportValue NprdSubnetPrivate2, !Ref "AWS::NoValue" ]
+                       
+            Tags:
+               - Key: env
+                 Value: !Ref Env
+                 PropagateAtLaunch: true
+               - Key: pillar
+                 Value: !Ref Pillar
+                 PropagateAtLaunch: true
+               - Key: target
+                 Value: !Join [ "_",[ !Ref EnvType, "Linux" ] ]
+                 PropagateAtLaunch: true
+               - Key: type
+                 Value: !Ref EnvType
+                 PropagateAtLaunch: true
+               - Key: client
+                 Value: !Ref ClientCode
+                 PropagateAtLaunch: true
+               - Key: os
+                 Value: redhatlinux7
+                 PropagateAtLaunch: true
+               - Key: service
+                 Value: web
+                 PropagateAtLaunch: true
+               - Key: TOOLS
+                 Value: !Ref ToolsVersion
+                 PropagateAtLaunch: true  
+               - Key: Domain
+                 Value: !Ref DomainName
+                 PropagateAtLaunch: true  
+               - Key: APPS
+                 Value: !Ref AppVersion
+                 PropagateAtLaunch: true
+               - Key: heapsize
+                 Value: !Ref heapsize
+                 PropagateAtLaunch: true  
+               - Key: webprofile
+                 Value: !Ref webprofile
+                 PropagateAtLaunch: true  
+                 
+        UpdatePolicy: 
+            AutoScalingRollingUpdate: 
+                MinInstancesInService: "1"
+                MaxBatchSize: "2"
+                PauseTime: "PT5M"
+                WaitOnResourceSignals: "true"
+            AutoScalingReplacingUpdate:
+                WillReplace: true
+
+    AppAutoScaleGrp:                
+        Type: AWS::AutoScaling::AutoScalingGroup
+        Properties:
+            Cooldown: 300
+            DesiredCapacity: !If [HAYes, 1, 1 ]
+            MinSize: !If [HAYes, 1, 1 ]
+            MaxSize: 1
+            HealthCheckGracePeriod: 100
+            HealthCheckType: !If [RenYes, ELB, EC2 ]
+            LoadBalancerNames: 
+               - !If [RenYes, !Ref RenElb, !Ref "AWS::NoValue" ]
+            LaunchConfigurationName: !Ref  AppLaunchCfg
+            NotificationConfigurations:
+               - TopicARN: 
+                    !ImportValue SnsNprdTopicArn
+                 NotificationTypes:
+                     - autoscaling:EC2_INSTANCE_LAUNCH
+                     - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+                     - autoscaling:EC2_INSTANCE_TERMINATE
+                     - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            TerminationPolicies:
+               - OldestLaunchConfiguration
+            VPCZoneIdentifier:
+                - !ImportValue NprdSubnetPrivate1
+                - !If [HAYes, !ImportValue NprdSubnetPrivate2, !Ref "AWS::NoValue" ]                
+            Tags:
+               - Key: env
+                 Value: !Ref Env
+                 PropagateAtLaunch: true
+               - Key: pillar
+                 Value: !Ref Pillar
+                 PropagateAtLaunch: true
+               - Key: target
+                 Value: !Join [ "_",[ !Ref EnvType, "Linux" ] ]
+                 PropagateAtLaunch: true
+               - Key: type
+                 Value: !Ref EnvType
+                 PropagateAtLaunch: true
+               - Key: client
+                 Value: !Ref ClientCode
+                 PropagateAtLaunch: true
+               - Key: os
+                 Value: redhatlinux7
+                 PropagateAtLaunch: true
+               - Key: service
+                 Value: app
+                 PropagateAtLaunch: true
+               - Key: TOOLS
+                 Value: !Ref ToolsVersion
+                 PropagateAtLaunch: true                 
+               - Key: APPS
+                 Value: !Ref AppVersion
+                 PropagateAtLaunch: true
+               - Key: ren
+                 Value: !Ref RenServer
+                 PropagateAtLaunch: true  
+               - Key: WSL
+                 Value: "Yes"
+                 PropagateAtLaunch: true    
+               - Key: pubsub
+                 Value: "Yes"
+                 PropagateAtLaunch: true 
+               - Key: JSH
+                 Value: !Ref JSH
+                 PropagateAtLaunch: true  
+               - Key: APSRV
+                 Value: !Ref APSRV
+                 PropagateAtLaunch: true   
+               - Key: ANALYTIC
+                 Value: !Ref ANALYTIC
+                 PropagateAtLaunch: true
+               - Key:  QCKSRV
+                 Value: !Ref QCKSRV
+                 PropagateAtLaunch: true
+               - Key:  QRYSRV
+                 Value: !Ref QRYSRV
+                 PropagateAtLaunch: true
+               - Key:  DBGSRV
+                 Value: !Ref DBGSRV
+                 PropagateAtLaunch: true
+               - Key:  McfServer
+                 Value: !Ref McfServer
+                 PropagateAtLaunch: true
+               - Key:  PPMServer
+                 Value: !Ref PPMServer
+                 PropagateAtLaunch: true
+               - Key:  DomainGateway
+                 Value: !Ref DomainGateway
+                 PropagateAtLaunch: true
+               - Key:  ServerEvents
+                 Value: !Ref ServerEvents
+                 PropagateAtLaunch: true
+               - Key: Domain
+                 Value: !Ref DomainName
+                 PropagateAtLaunch: true    
+        UpdatePolicy: 
+            AutoScalingRollingUpdate: 
+                MinInstancesInService: "1"
+                MaxBatchSize: "2"
+                PauseTime: "PT5M"
+                WaitOnResourceSignals: "true"
+            AutoScalingReplacingUpdate:
+                WillReplace: true
+            
+    
+    
+    PsunxAutoScaleGrp:                
+        Type: AWS::AutoScaling::AutoScalingGroup
+        Properties:
+            Cooldown: 300
+            DesiredCapacity: 1
+            MinSize: 1
+            MaxSize: 2
+            HealthCheckGracePeriod: 100
+            HealthCheckType: EC2
+            LaunchConfigurationName: !Ref  PsuLaunchCfg
+            NotificationConfigurations:
+               - TopicARN: 
+                    !ImportValue SnsNprdTopicArn
+                 NotificationTypes:
+                     - autoscaling:EC2_INSTANCE_LAUNCH
+                     - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+                     - autoscaling:EC2_INSTANCE_TERMINATE
+                     - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            TerminationPolicies:
+               - OldestLaunchConfiguration
+            VPCZoneIdentifier:
+                - !ImportValue NprdSubnetPrivate1 
+                - !If [HAYes, !ImportValue NprdSubnetPrivate2, !Ref "AWS::NoValue" ]
+            Tags:
+               - Key: env
+                 Value: !Ref Env
+                 PropagateAtLaunch: true
+               - Key: pillar
+                 Value: !Ref Pillar
+                 PropagateAtLaunch: true
+               - Key: target
+                 Value: !Join [ "_",[ !Ref EnvType, "Linux" ] ]
+                 PropagateAtLaunch: true
+               - Key: type
+                 Value: !Ref EnvType
+                 PropagateAtLaunch: true
+               - Key: client
+                 Value: !Ref ClientCode
+                 PropagateAtLaunch: true
+               - Key: os
+                 Value: redhatlinux7
+                 PropagateAtLaunch: true
+               - Key: service
+                 Value: prcs
+                 PropagateAtLaunch: true
+               - Key: TOOLS
+                 Value: !Ref ToolsVersion
+                 PropagateAtLaunch: true                 
+               - Key: APPS
+                 Value: !Ref AppVersion
+                 PropagateAtLaunch: true
+               - Key: SCHNAME
+                 Value: !Ref SCHNAME
+                 PropagateAtLaunch: true    
+               - Key: AESRV
+                 Value: !Ref AESRV
+                 PropagateAtLaunch: true  
+               - Key: Domain
+                 Value: !Ref DomainName
+                 PropagateAtLaunch: true    
+               
+        UpdatePolicy: 
+            AutoScalingRollingUpdate: 
+                MinInstancesInService: "1"
+                MaxBatchSize: "2"
+                PauseTime: "PT5M"
+                WaitOnResourceSignals: "true"
+            AutoScalingReplacingUpdate:
+                WillReplace: true
+ 
+    AddlPsunxAutoScaleGrp:                
+        Type: AWS::AutoScaling::AutoScalingGroup
+        Condition: AddScheduler
+        Properties:
+            Cooldown: 300
+            DesiredCapacity: 1
+            MinSize: 1
+            MaxSize: 2
+            HealthCheckGracePeriod: 100
+            HealthCheckType: EC2
+            LaunchConfigurationName: !Ref  PsuLaunchCfg
+            NotificationConfigurations:
+               - TopicARN: 
+                    !ImportValue SnsNprdTopicArn
+                 NotificationTypes:
+                     - autoscaling:EC2_INSTANCE_LAUNCH
+                     - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+                     - autoscaling:EC2_INSTANCE_TERMINATE
+                     - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+            TerminationPolicies:
+               - OldestLaunchConfiguration
+            VPCZoneIdentifier:
+                - !ImportValue NprdSubnetPrivate1 
+                - !If [HAYes, !ImportValue NprdSubnetPrivate2, !Ref "AWS::NoValue" ]
+            Tags:
+               - Key: env
+                 Value: !Ref Env
+                 PropagateAtLaunch: true
+               - Key: pillar
+                 Value: !Ref Pillar
+                 PropagateAtLaunch: true
+               - Key: target
+                 Value: !Join [ "_",[ !Ref EnvType, "Linux" ] ]
+                 PropagateAtLaunch: true
+               - Key: type
+                 Value: !Ref EnvType
+                 PropagateAtLaunch: true
+               - Key: client
+                 Value: !Ref ClientCode
+                 PropagateAtLaunch: true
+               - Key: os
+                 Value: redhatlinux7
+                 PropagateAtLaunch: true
+               - Key: service
+                 Value: prcs
+                 PropagateAtLaunch: true
+               - Key: TOOLS
+                 Value: !Ref ToolsVersion
+                 PropagateAtLaunch: true                 
+               - Key: APPS
+                 Value: !Ref AppVersion
+                 PropagateAtLaunch: true
+               - Key: SCHNAME
+                 Value: !Ref AddlSCHNAME
+                 PropagateAtLaunch: true    
+               - Key: AESRV
+                 Value: !Ref AddlAESRV 
+                 PropagateAtLaunch: true 
+               - Key: Domain
+                 Value: !Ref DomainName
+                 PropagateAtLaunch: true    
+               
+        UpdatePolicy: 
+            AutoScalingRollingUpdate: 
+                MinInstancesInService: "1"
+                MaxBatchSize: "2"
+                PauseTime: "PT5M"
+                WaitOnResourceSignals: "true"
+            AutoScalingReplacingUpdate:
+                WillReplace: true
+                
+ 
+    
+            
