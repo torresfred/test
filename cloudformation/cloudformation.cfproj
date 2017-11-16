@@ -17,15 +17,17 @@
     <Compile Include="cloudformation.template">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Nprd_autoscale_build.template">
+    <Compile Include="vpc.json.template">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="VPC.json.template">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="VPC.template">
-      <SubType>Code</SubType>
-    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="nprd_autoscale_build.yaml">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="vpc.yaml">
+      <SubType>Content</SubType>
+    </Content>
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
   </PropertyGroup>
