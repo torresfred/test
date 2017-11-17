@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: 2010-09-10
+AWSTemplateFormatVersion: 2010-09-11
 Description: >-
   SCI Template to create VPC on the basis of parameter input
 Parameters:
